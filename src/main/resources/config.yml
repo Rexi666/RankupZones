@@ -1,18 +1,72 @@
-# Mundos donde se bloquea el spawn de cualquier mob excepto en las regiones permitidas
 disabled-worlds:
   - mobs
 
-# Regiones dentro de cada mundo donde se permite el spawn de ciertos mobs
 region-whitelist:
   mobs:
     farm_region:
-      max: 20
       mobs:
-      - COW
-      - SHEEP
-      - CHICKEN
+        - COW
+        - SHEEP
+        - CHICKEN
+      max-count: 20
+      required-permission: "rankupzones.access.farm"
+      custom-drops:
+        COW:
+          - material: LEATHER
+            amount: 3
+            name: "&6Cuero Especial"
+            lore:
+              - "&7Un cuero de calidad superior"
+              - "&7Muy resistente."
+            enchanted: true
+
+          - material: BEEF
+            amount: 2
+            name: "&cCarne Premium"
+            lore:
+              - "&7Carne fresca y sabrosa."
+            enchanted: false
+
+        SHEEP:
+          - material: WOOL
+            amount: 5
+            name: "&fLana Suave"
+            lore:
+              - "&7Perfecta para hacer ropa."
+
+        CHICKEN:
+          - material: FEATHER
+            amount: 4
+            name: "&fPluma Ligera"
+            lore:
+              - "&7Ideal para hacer flechas rápidas."
+
     hostile_region:
-      max: 30
       mobs:
-      - ZOMBIE
-      - SKELETON
+        - ZOMBIE
+        - SKELETON
+      max-count: 15
+      required-permission: "rankupzones.access.hostile"
+      custom-drops:
+        ZOMBIE:
+          - material: ROTTEN_FLESH
+            amount: 1
+            name: "&2Carne Corrupta"
+            lore:
+              - "&7Huele muy mal."
+            enchanted: false
+
+        SKELETON:
+          - material: BONE
+            amount: 3
+            name: "&fHueso Antiguo"
+            lore:
+              - "&7De un esqueleto olvidado."
+            enchanted: false
+
+          - material: ARROW
+            amount: 10
+            name: "&fFlechas Afiladas"
+            lore:
+              - "&7Perfectas para la puntería."
+            enchanted: false

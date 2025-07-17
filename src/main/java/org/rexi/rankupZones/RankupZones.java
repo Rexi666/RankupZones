@@ -1,24 +1,24 @@
 package org.rexi.rankupZones;
 
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
+import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldguard.WorldGuard;
 import com.sk89q.worldguard.protection.ApplicableRegionSet;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
-import com.sk89q.worldguard.protection.regions.RegionContainer;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Location;
-import org.bukkit.World;
-import org.bukkit.block.Block;
+import org.bukkit.*;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.LivingEntity;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.CreatureSpawnEvent;
+import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -27,7 +27,7 @@ import java.util.*;
 public class RankupZones extends JavaPlugin implements Listener {
 
     private Set<String> disabledWorlds;
-    private Map<String, Map<String, RegionConfig>> regionWhitelist;
+    private Map<String, Map<String, RegionConfig>> regionConfigs;
 
     @Override
     public void onEnable() {
@@ -40,30 +40,74 @@ public class RankupZones extends JavaPlugin implements Listener {
             public void run() {
                 spawnMobsInRegions();
             }
-        }.runTaskTimer(this, 20L, 20L * 60); // Cada 60 segundos
+        }.runTaskTimer(this, 20L, 20L * 60);
     }
 
     private void loadConfig() {
         disabledWorlds = new HashSet<>(getConfig().getStringList("disabled-worlds"));
 
-        regionWhitelist = new HashMap<>();
-        if (getConfig().isConfigurationSection("region-whitelist")) {
-            for (String worldName : getConfig().getConfigurationSection("region-whitelist").getKeys(false)) {
+        regionConfigs = new HashMap<>();
+        ConfigurationSection worldSection = getConfig().getConfigurationSection("region-whitelist");
+        if (worldSection != null) {
+            for (String worldName : worldSection.getKeys(false)) {
+                ConfigurationSection regionsSection = worldSection.getConfigurationSection(worldName);
                 Map<String, RegionConfig> regions = new HashMap<>();
-                for (String region : getConfig().getConfigurationSection("region-whitelist." + worldName).getKeys(false)) {
-                    int max = getConfig().getInt("region-whitelist." + worldName + "." + region + ".max", 10);
-                    List<String> mobNames = getConfig().getStringList("region-whitelist." + worldName + "." + region + ".mobs");
+
+                for (String regionName : regionsSection.getKeys(false)) {
+                    ConfigurationSection regionData = regionsSection.getConfigurationSection(regionName);
                     List<EntityType> entityTypes = new ArrayList<>();
-                    for (String mob : mobNames) {
+                    for (String mob : regionData.getStringList("mobs")) {
                         try {
                             entityTypes.add(EntityType.valueOf(mob.toUpperCase()));
                         } catch (IllegalArgumentException e) {
                             getLogger().warning("Entidad inválida en la configuración: " + mob);
                         }
                     }
-                    regions.put(region, new RegionConfig(max, entityTypes));
+                    int maxCount = regionData.getInt("max-count", 20);
+                    String requiredPermission = regionData.getString("required-permission", null);
+                    ConfigurationSection dropsSection = regionData.getConfigurationSection("custom-drops");
+                    Map<EntityType, List<ItemStack>> customDrops = new HashMap<>();
+
+                    if (dropsSection != null) {
+                        for (String mobName : dropsSection.getKeys(false)) {
+                            EntityType type = EntityType.valueOf(mobName.toUpperCase());
+                            List<ItemStack> drops = new ArrayList<>();
+                            ConfigurationSection itemList = dropsSection.getConfigurationSection(mobName);
+                            for (String key : itemList.getKeys(false)) {
+                                ConfigurationSection itemData = itemList.getConfigurationSection(key);
+                                Material mat = Material.getMaterial(itemData.getString("material").toUpperCase());
+                                if (mat == null) continue;
+
+                                int amount = itemData.getInt("amount", 1);
+                                ItemStack item = new ItemStack(mat, amount);
+                                ItemMeta meta = item.getItemMeta();
+
+                                if (itemData.contains("name")) {
+                                    meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', itemData.getString("name")));
+                                }
+
+                                if (itemData.contains("lore")) {
+                                    List<String> loreRaw = itemData.getStringList("lore");
+                                    List<String> lore = new ArrayList<>();
+                                    for (String line : loreRaw) {
+                                        lore.add(ChatColor.translateAlternateColorCodes('&', line));
+                                    }
+                                    meta.setLore(lore);
+                                }
+
+                                if (itemData.getBoolean("enchanted", false)) {
+                                    meta.addEnchant(Enchantment.UNBREAKING, 1, true);
+                                }
+
+                                item.setItemMeta(meta);
+                                drops.add(item);
+                            }
+                            customDrops.put(type, drops);
+                        }
+                    }
+                    regions.put(regionName, new RegionConfig(entityTypes, maxCount, requiredPermission, customDrops));
                 }
-                regionWhitelist.put(worldName, regions);
+                regionConfigs.put(worldName, regions);
             }
         }
     }
@@ -73,7 +117,7 @@ public class RankupZones extends JavaPlugin implements Listener {
         LivingEntity entity = event.getEntity();
         String worldName = entity.getWorld().getName();
 
-        if (!disabledWorlds.contains(worldName)) {
+        if (disabledWorlds.contains(worldName)) {  // CORREGIDO: antes el if estaba al revés
             return;
         }
 
@@ -84,30 +128,24 @@ public class RankupZones extends JavaPlugin implements Listener {
             return;
         }
 
-        Map<String, RegionConfig> worldRegions = regionWhitelist.get(worldName);
-        if (worldRegions != null) {
-            RegionConfig config = worldRegions.get(region);
-            if (config != null && config.entityTypes.contains(entity.getType())) {
-                entity.setAI(false);
-                return; // Permitido con IA desactivada
-            }
+        RegionConfig config = regionConfigs.getOrDefault(worldName, Collections.emptyMap()).get(region);
+        if (config != null && config.allowedMobs.contains(entity.getType())) {
+            entity.setAI(false);
+            return;
         }
 
         event.setCancelled(true);
     }
 
     private void spawnMobsInRegions() {
-        for (String worldName : regionWhitelist.keySet()) {
+        for (String worldName : regionConfigs.keySet()) {
             World world = Bukkit.getWorld(worldName);
             if (world == null) continue;
 
-            RegionContainer container = WorldGuard.getInstance().getPlatform().getRegionContainer();
-            RegionManager regionManager = container.get(BukkitAdapter.adapt(world));
-
+            RegionManager regionManager = WorldGuard.getInstance().getPlatform().getRegionContainer().get(BukkitAdapter.adapt(world));
             if (regionManager == null) continue;
 
-            Map<String, RegionConfig> regions = regionWhitelist.get(worldName);
-            for (Map.Entry<String, RegionConfig> entry : regions.entrySet()) {
+            for (Map.Entry<String, RegionConfig> entry : regionConfigs.get(worldName).entrySet()) {
                 String regionId = entry.getKey();
                 RegionConfig config = entry.getValue();
 
@@ -115,71 +153,85 @@ public class RankupZones extends JavaPlugin implements Listener {
                 if (region == null) continue;
 
                 int currentCount = 0;
-                for (Entity entity : world.getEntities()) {
-                    if (entity instanceof LivingEntity) {
-                        if (region.contains(entity.getLocation().getBlockX(), entity.getLocation().getBlockY(), entity.getLocation().getBlockZ())) {
-                            if (config.entityTypes.contains(entity.getType())) {
-                                currentCount++;
-                            }
+                for (Entity e : world.getEntities()) {
+                    if (e instanceof LivingEntity && !e.isDead()) {
+                        String entityRegion = getRegionAt(e.getLocation());
+                        if (regionId.equals(entityRegion)) {
+                            currentCount++;
                         }
                     }
                 }
 
-                int toSpawn = Math.min(5, config.max - currentCount);
+                int toSpawn = Math.min(5, config.maxCount - currentCount);
+                if (toSpawn <= 0) continue;
+
+                BlockVector3 min = region.getMinimumPoint();
+                BlockVector3 max = region.getMaximumPoint();
+
                 for (int i = 0; i < toSpawn; i++) {
-                    EntityType type = config.getRandomEntityType();
-                    Location spawnLocation = getSafeLocation(world, region);
-                    if (spawnLocation != null) {
-                        LivingEntity spawned = (LivingEntity) world.spawnEntity(spawnLocation, type);
-                        spawned.setAI(false);
+                    EntityType type = config.getRandomMobType();
+                    double x = randomInRange(min.getBlockX(), max.getBlockX());
+                    double y = min.getBlockY();
+                    double z = randomInRange(min.getBlockZ(), max.getBlockZ());
+
+                    Location loc = new Location(world, x, y, z);
+                    while (loc.getBlock().getType().isAir() && loc.getY() > 1) {
+                        loc.subtract(0, 1, 0);
                     }
+
+                    LivingEntity entity = (LivingEntity) world.spawnEntity(loc.add(0, 1, 0), type);
+                    entity.setAI(false);
                 }
             }
         }
     }
 
-    private Location getSafeLocation(World world, ProtectedRegion region) {
-        Location min = BukkitAdapter.adapt(world, region.getMinimumPoint());
-        Location max = BukkitAdapter.adapt(world, region.getMaximumPoint());
-
-        for (int attempt = 0; attempt < 10; attempt++) {
-            double x = min.getX() + Math.random() * (max.getX() - min.getX());
-            double y = min.getY() + Math.random() * (max.getY() - min.getY());
-            double z = min.getZ() + Math.random() * (max.getZ() - min.getZ());
-
-            Location loc = new Location(world, x, y, z);
-            Location ground = findGround(loc);
-            if (ground != null) return ground;
-        }
-
-        return null;
-    }
-
-    private Location findGround(Location loc) {
-        int y = loc.getBlockY();
-        while (y > 0) {
-            Block block = loc.getWorld().getBlockAt(loc.getBlockX(), y, loc.getBlockZ());
-            if (block.getType().isSolid()) {
-                return new Location(loc.getWorld(), loc.getX(), y + 1, loc.getZ());
-            }
-            y--;
-        }
-        return null;
+    private double randomInRange(int min, int max) {
+        return min + Math.random() * (max - min + 1);
     }
 
     private String getRegionAt(Location loc) {
-        RegionContainer container = WorldGuard.getInstance().getPlatform().getRegionContainer();
-        RegionManager regions = container.get(BukkitAdapter.adapt(loc.getWorld()));
-
+        RegionManager regions = WorldGuard.getInstance().getPlatform().getRegionContainer().get(BukkitAdapter.adapt(loc.getWorld()));
         if (regions == null) return null;
 
         ApplicableRegionSet regionSet = regions.getApplicableRegions(BukkitAdapter.asBlockVector(loc));
-
         for (ProtectedRegion region : regionSet) {
             return region.getId();
         }
-
         return null;
+    }
+
+    @EventHandler
+    public void onEntityDeath(EntityDeathEvent event) {
+        LivingEntity entity = event.getEntity();
+        String region = getRegionAt(entity.getLocation());
+
+        if (region != null) {
+            String worldName = entity.getWorld().getName();
+            RegionConfig config = regionConfigs.getOrDefault(worldName, Collections.emptyMap()).get(region);
+
+            if (config != null && config.customDrops.containsKey(entity.getType())) {
+                event.getDrops().clear();
+                event.getDrops().addAll(config.customDrops.get(entity.getType()));
+            }
+        }
+    }
+
+    @EventHandler
+    public void onPlayerMove(PlayerMoveEvent event) {
+        if (event.getTo() == null) return;
+        String fromRegion = getRegionAt(event.getFrom());
+        String toRegion = getRegionAt(event.getTo());
+
+        if (toRegion != null && !toRegion.equals(fromRegion)) {
+            String worldName = event.getTo().getWorld().getName();
+            RegionConfig config = regionConfigs.getOrDefault(worldName, Collections.emptyMap()).get(toRegion);
+
+            if (config != null && config.requiredPermission != null && !event.getPlayer().hasPermission(config.requiredPermission)) {
+                event.getPlayer().sendMessage(ChatColor.RED + "No tienes permiso para entrar en esta zona.");
+                event.setCancelled(true);
+            }
+        }
     }
 
     @Override
@@ -199,17 +251,20 @@ public class RankupZones extends JavaPlugin implements Listener {
     }
 
     private static class RegionConfig {
-        int max;
-        List<EntityType> entityTypes;
+        List<EntityType> allowedMobs;
+        int maxCount;
+        String requiredPermission;
+        Map<EntityType, List<ItemStack>> customDrops;
 
-        public RegionConfig(int max, List<EntityType> entityTypes) {
-            this.max = max;
-            this.entityTypes = entityTypes;
+        public RegionConfig(List<EntityType> allowedMobs, int maxCount, String requiredPermission, Map<EntityType, List<ItemStack>> customDrops) {
+            this.allowedMobs = allowedMobs;
+            this.maxCount = maxCount;
+            this.requiredPermission = requiredPermission;
+            this.customDrops = customDrops;
         }
 
-        public EntityType getRandomEntityType() {
-            if (entityTypes.isEmpty()) return EntityType.PIG;
-            return entityTypes.get(new Random().nextInt(entityTypes.size()));
+        public EntityType getRandomMobType() {
+            return allowedMobs.get(new Random().nextInt(allowedMobs.size()));
         }
     }
 }

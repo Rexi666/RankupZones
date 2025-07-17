@@ -70,24 +70,32 @@ public class RankupZones extends JavaPlugin implements Listener {
 
                     if (dropsSection != null) {
                         for (String mobName : dropsSection.getKeys(false)) {
-                            EntityType type = EntityType.valueOf(mobName.toUpperCase());
+                            EntityType type;
+                            try {
+                                type = EntityType.valueOf(mobName.toUpperCase());
+                            } catch (IllegalArgumentException e) {
+                                getLogger().warning("Entidad inválida en custom-drops: " + mobName);
+                                continue;
+                            }
+
                             List<ItemStack> drops = new ArrayList<>();
-                            ConfigurationSection itemList = dropsSection.getConfigurationSection(mobName);
-                            for (String key : itemList.getKeys(false)) {
-                                ConfigurationSection itemData = itemList.getConfigurationSection(key);
-                                Material mat = Material.getMaterial(itemData.getString("material").toUpperCase());
+                            List<Map<?, ?>> itemList = dropsSection.getMapList(mobName);
+                            for (Map<?, ?> itemDataRaw : itemList) {
+                                Map<String, Object> itemData = (Map<String, Object>) itemDataRaw;
+
+                                Material mat = Material.getMaterial(((String) itemData.get("material")).toUpperCase());
                                 if (mat == null) continue;
 
-                                int amount = itemData.getInt("amount", 1);
+                                int amount = (int) itemData.getOrDefault("amount", 1);
                                 ItemStack item = new ItemStack(mat, amount);
                                 ItemMeta meta = item.getItemMeta();
 
-                                if (itemData.contains("name")) {
-                                    meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', itemData.getString("name")));
+                                if (itemData.containsKey("name")) {
+                                    meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', (String) itemData.get("name")));
                                 }
 
-                                if (itemData.contains("lore")) {
-                                    List<String> loreRaw = itemData.getStringList("lore");
+                                if (itemData.containsKey("lore")) {
+                                    List<String> loreRaw = (List<String>) itemData.get("lore");
                                     List<String> lore = new ArrayList<>();
                                     for (String line : loreRaw) {
                                         lore.add(ChatColor.translateAlternateColorCodes('&', line));
@@ -95,7 +103,7 @@ public class RankupZones extends JavaPlugin implements Listener {
                                     meta.setLore(lore);
                                 }
 
-                                if (itemData.getBoolean("enchanted", false)) {
+                                if ((boolean) itemData.getOrDefault("enchanted", false)) {
                                     meta.addEnchant(Enchantment.UNBREAKING, 1, true);
                                 }
 
@@ -111,6 +119,7 @@ public class RankupZones extends JavaPlugin implements Listener {
             }
         }
     }
+
 
     @EventHandler
     public void onCreatureSpawn(CreatureSpawnEvent event) {

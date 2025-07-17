@@ -1,0 +1,18 @@
+# Mundos donde se bloquea el spawn de cualquier mob excepto en las regiones permitidas
+disabled-worlds:
+  - mobs
+
+# Regiones dentro de cada mundo donde se permite el spawn de ciertos mobs
+region-whitelist:
+  mobs:
+    farm_region:
+      max: 20
+      mobs:
+      - COW
+      - SHEEP
+      - CHICKEN
+    hostile_region:
+      max: 30
+      mobs:
+      - ZOMBIE
+      - SKELETON

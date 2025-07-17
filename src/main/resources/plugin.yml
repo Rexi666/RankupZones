@@ -1,0 +1,10 @@
+name: RankupZones
+version: '1.0-SNAPSHOT'
+main: org.rexi.rankupZones.RankupZones
+api-version: '1.20'
+dependencies:
+  - WorldGuard
+commands:
+  rz:
+    description: Recargar la configuración del plugin
+    usage: /rz reload

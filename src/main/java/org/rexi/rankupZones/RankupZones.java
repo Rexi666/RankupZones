@@ -126,12 +126,12 @@ public class RankupZones extends JavaPlugin implements Listener {
         LivingEntity entity = event.getEntity();
         String worldName = entity.getWorld().getName();
 
-        if (disabledWorlds.contains(worldName)) {  // CORREGIDO: antes el if estaba al revés
+        // Solo controlar el spawn si el mundo está en la lista de mundos controlados
+        if (!disabledWorlds.contains(worldName)) {
             return;
         }
 
         String region = getRegionAt(entity.getLocation());
-
         if (region == null) {
             event.setCancelled(true);
             return;

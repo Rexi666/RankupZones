@@ -23,6 +23,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class RankupZones extends JavaPlugin implements Listener {
 
@@ -40,7 +41,7 @@ public class RankupZones extends JavaPlugin implements Listener {
             public void run() {
                 spawnMobsInRegions();
             }
-        }.runTaskTimer(this, 20L, 20L * 60);
+        }.runTaskTimer(this, 20L, 20L * 15);
     }
 
     private void loadConfig() {
@@ -147,52 +148,95 @@ public class RankupZones extends JavaPlugin implements Listener {
     }
 
     private void spawnMobsInRegions() {
-        for (String worldName : regionConfigs.keySet()) {
-            World world = Bukkit.getWorld(worldName);
-            if (world == null) continue;
+        for (World world : Bukkit.getWorlds()) {
+            String worldName = world.getName();
+            Map<String, RegionConfig> configs = regionConfigs.get(worldName);
+            boolean isDisabledWorld = disabledWorlds.contains(worldName);
 
-            RegionManager regionManager = WorldGuard.getInstance().getPlatform().getRegionContainer().get(BukkitAdapter.adapt(world));
-            if (regionManager == null) continue;
+            if (isDisabledWorld) {
+                // Si es un mundo deshabilitado, solo spawnear en regiones whitelist
+                if (configs == null || configs.isEmpty()) continue;
 
-            for (Map.Entry<String, RegionConfig> entry : regionConfigs.get(worldName).entrySet()) {
-                String regionId = entry.getKey();
-                RegionConfig config = entry.getValue();
+                RegionManager regionManager = WorldGuard.getInstance().getPlatform().getRegionContainer().get(BukkitAdapter.adapt(world));
+                if (regionManager == null) continue;
 
-                ProtectedRegion region = regionManager.getRegion(regionId);
-                if (region == null) continue;
+                for (Map.Entry<String, RegionConfig> entry : configs.entrySet()) {
+                    String regionId = entry.getKey();
+                    RegionConfig config = entry.getValue();
 
-                int currentCount = 0;
-                for (Entity e : world.getEntities()) {
-                    if (e instanceof LivingEntity && !e.isDead()) {
-                        String entityRegion = getRegionAt(e.getLocation());
-                        if (regionId.equals(entityRegion)) {
-                            currentCount++;
-                        }
-                    }
+                    ProtectedRegion region = regionManager.getRegion(regionId);
+                    if (region == null) continue;
+
+                    int currentCount = countEntitiesInRegion(world, regionId);
+                    int toSpawn = Math.min(5, config.maxCount - currentCount);
+                    if (toSpawn <= 0) continue;
+
+                    spawnMobsInRegion(world, region, config, toSpawn);
                 }
+            } else {
+                // Si NO es un mundo deshabilitado, spawnear sin importar regiones si hay config
+                if (configs == null || configs.isEmpty()) continue;
 
-                int toSpawn = Math.min(5, config.maxCount - currentCount);
-                if (toSpawn <= 0) continue;
+                for (RegionConfig config : configs.values()) {
+                    int currentCount = countEntitiesOfTypes(world, config.allowedMobs);
+                    int toSpawn = Math.min(5, config.maxCount - currentCount);
+                    if (toSpawn <= 0) continue;
 
-                BlockVector3 min = region.getMinimumPoint();
-                BlockVector3 max = region.getMaximumPoint();
-
-                for (int i = 0; i < toSpawn; i++) {
-                    EntityType type = config.getRandomMobType();
-                    double x = randomInRange(min.getBlockX(), max.getBlockX());
-                    double y = min.getBlockY();
-                    double z = randomInRange(min.getBlockZ(), max.getBlockZ());
-
-                    Location loc = new Location(world, x, y, z);
-                    while (loc.getBlock().getType().isAir() && loc.getY() > 1) {
-                        loc.subtract(0, 1, 0);
+                    for (int i = 0; i < toSpawn; i++) {
+                        EntityType type = config.getRandomMobType();
+                        Location loc = getRandomLocationInWorld(world);
+                        world.spawnEntity(loc, type);
                     }
-
-                    LivingEntity entity = (LivingEntity) world.spawnEntity(loc.add(0, 1, 0), type);
-                    entity.setAI(false);
                 }
             }
         }
+    }
+
+    private int countEntitiesInRegion(World world, String regionId) {
+        return (int) world.getEntities().stream()
+                .filter(e -> e instanceof LivingEntity && !e.isDead() && regionId.equals(getRegionAt(e.getLocation())))
+                .count();
+    }
+
+    private int countEntitiesOfTypes(World world, List<EntityType> types) {
+        return (int) world.getEntities().stream()
+                .filter(e -> e instanceof LivingEntity && !e.isDead() && types.contains(e.getType()))
+                .count();
+    }
+
+    private void spawnMobsInRegion(World world, ProtectedRegion region, RegionConfig config, int toSpawn) {
+        BlockVector3 min = region.getMinimumPoint();
+        BlockVector3 max = region.getMaximumPoint();
+
+        for (int i = 0; i < toSpawn; i++) {
+            EntityType type = config.getRandomMobType();
+            int minX = min.x();
+            int minY = min.y();
+            int minZ = min.z();
+
+            int maxX = max.x();
+            int maxY = max.y();
+            int maxZ = max.z();
+
+            double x = minX + Math.random() * (maxX - minX);
+            double y = minY;
+            double z = minZ + Math.random() * (maxZ - minZ);
+
+            Location loc = new Location(world, x, y, z);
+            while (loc.getBlock().getType().isAir() && loc.getY() > 1) {
+                loc.subtract(0, 1, 0);
+            }
+
+            LivingEntity entity = (LivingEntity) world.spawnEntity(loc.add(0, 1, 0), type);
+            entity.setAI(false);
+        }
+    }
+
+    private Location getRandomLocationInWorld(World world) {
+        int x = ThreadLocalRandom.current().nextInt(-1000, 1000);
+        int z = ThreadLocalRandom.current().nextInt(-1000, 1000);
+        int y = world.getHighestBlockYAt(x, z);
+        return new Location(world, x, y + 1, z);
     }
 
     private double randomInRange(int min, int max) {

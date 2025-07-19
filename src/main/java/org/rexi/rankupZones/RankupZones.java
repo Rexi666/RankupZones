@@ -15,8 +15,10 @@ import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.CreatureSpawnEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -106,6 +108,7 @@ public class RankupZones extends JavaPlugin implements Listener {
 
                                 if ((boolean) itemData.getOrDefault("enchanted", false)) {
                                     meta.addEnchant(Enchantment.UNBREAKING, 1, true);
+                                    meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
                                 }
 
                                 item.setItemMeta(meta);
@@ -121,6 +124,24 @@ public class RankupZones extends JavaPlugin implements Listener {
         }
     }
 
+    @EventHandler
+    public void onEntityDamage(EntityDamageByEntityEvent event) {
+        if (!(event.getDamager() instanceof Player)) return;
+
+        Player player = (Player) event.getDamager();
+        Location location = event.getEntity().getLocation();
+        String regionId = getRegionAt(location);
+
+        if (regionId != null) {
+            String worldName = location.getWorld().getName();
+            RegionConfig config = regionConfigs.getOrDefault(worldName, Collections.emptyMap()).get(regionId);
+
+            if (config != null && config.requiredPermission != null && !player.hasPermission(config.requiredPermission)) {
+                player.sendMessage(ChatColor.RED + "No tienes permiso para dañar entidades en esta zona.");
+                event.setCancelled(true);
+            }
+        }
+    }
 
     @EventHandler
     public void onCreatureSpawn(CreatureSpawnEvent event) {

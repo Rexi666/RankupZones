@@ -167,8 +167,9 @@ public class RankupZones extends JavaPlugin implements Listener {
                     ProtectedRegion region = regionManager.getRegion(regionId);
                     if (region == null) continue;
 
-                    int currentCount = countEntitiesInRegion(world, regionId);
+                    int currentCount = countEntitiesInRegion(world, regionId, config.allowedMobs);
                     int toSpawn = Math.min(5, config.maxCount - currentCount);
+                    getLogger().info("Region " + regionId + ": current=" + currentCount + ", max=" + config.maxCount);
                     if (toSpawn <= 0) continue;
 
                     spawnMobsInRegion(world, region, config, toSpawn);
@@ -192,9 +193,11 @@ public class RankupZones extends JavaPlugin implements Listener {
         }
     }
 
-    private int countEntitiesInRegion(World world, String regionId) {
+    private int countEntitiesInRegion(World world, String regionId, List<EntityType> allowedTypes) {
         return (int) world.getEntities().stream()
-                .filter(e -> e instanceof LivingEntity && !e.isDead() && regionId.equals(getRegionAt(e.getLocation())))
+                .filter(e -> e instanceof LivingEntity && !e.isDead())
+                .filter(e -> regionId.equals(getRegionAt(e.getLocation())))
+                .filter(e -> allowedTypes.contains(e.getType()))
                 .count();
     }
 

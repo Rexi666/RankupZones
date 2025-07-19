@@ -7,6 +7,7 @@ import com.sk89q.worldguard.protection.ApplicableRegionSet;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import org.bukkit.*;
+import org.bukkit.block.Block;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
@@ -193,7 +194,34 @@ public class RankupZones extends JavaPlugin implements Listener {
                     getLogger().info("Region " + regionId + ": current=" + currentCount + ", max=" + config.maxCount);
                     if (toSpawn <= 0) continue;
 
-                    spawnMobsInRegion(world, region, config, toSpawn);
+                    BlockVector3 min = region.getMinimumPoint();
+                    BlockVector3 max = region.getMaximumPoint();
+
+                    for (int i = 0; i < toSpawn; i++) {
+                        EntityType type = config.getRandomMobType();
+                        boolean spawned = false;
+
+                        for (int attempt = 0; attempt < 10 && !spawned; attempt++) {
+                            int x = ThreadLocalRandom.current().nextInt(min.getBlockX(), max.getBlockX() + 1);
+                            int z = ThreadLocalRandom.current().nextInt(min.getBlockZ(), max.getBlockZ() + 1);
+                            int y = max.getBlockY();
+
+                            while (y > min.getBlockY()) {
+                                Location loc = new Location(world, x + 0.5, y, z + 0.5);
+                                if (isSafeSpawnLocation(loc)) {
+                                    LivingEntity entity = (LivingEntity) world.spawnEntity(loc.add(0, 1, 0), type);
+                                    entity.setAI(false);
+                                    spawned = true;
+                                    break;
+                                }
+                                y--;
+                            }
+                        }
+
+                        if (!spawned) {
+                            getLogger().warning("No se encontró una ubicación segura para spawnear en la región " + regionId);
+                        }
+                    }
                 }
             } else {
                 // Si NO es un mundo deshabilitado, spawnear sin importar regiones si hay config
@@ -207,12 +235,16 @@ public class RankupZones extends JavaPlugin implements Listener {
                     for (int i = 0; i < toSpawn; i++) {
                         EntityType type = config.getRandomMobType();
                         Location loc = getRandomLocationInWorld(world);
-                        world.spawnEntity(loc, type);
+                        if (isSafeSpawnLocation(loc)) {
+                            LivingEntity entity = (LivingEntity) world.spawnEntity(loc, type);
+                            entity.setAI(false);
+                        }
                     }
                 }
             }
         }
     }
+
 
     private int countEntitiesInRegion(World world, String regionId, List<EntityType> allowedTypes) {
         return (int) world.getEntities().stream()
@@ -343,5 +375,16 @@ public class RankupZones extends JavaPlugin implements Listener {
         public EntityType getRandomMobType() {
             return allowedMobs.get(new Random().nextInt(allowedMobs.size()));
         }
+    }
+
+    private boolean isSafeSpawnLocation(Location loc) {
+        Block block = loc.getBlock();
+        Block above = block.getRelative(0, 1, 0);
+        Block twoAbove = block.getRelative(0, 2, 0);
+
+        // El bloque base debe ser sólido y los bloques de arriba deben ser aire
+        return block.getType().isSolid()
+                && above.getType() == Material.AIR
+                && twoAbove.getType() == Material.AIR;
     }
 }

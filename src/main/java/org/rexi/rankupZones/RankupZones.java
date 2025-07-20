@@ -31,12 +31,14 @@ public class RankupZones extends JavaPlugin implements Listener {
 
     private Set<String> disabledWorlds;
     private Map<String, Map<String, RegionConfig>> regionConfigs;
+    private Map<String, Map<String, Integer>> mobCounters = new HashMap<>();
 
     @Override
     public void onEnable() {
         saveDefaultConfig();
         loadConfig();
         Bukkit.getPluginManager().registerEvents(this, this);
+        clearMobsInRegions();
 
         new BukkitRunnable() {
             @Override
@@ -45,6 +47,33 @@ public class RankupZones extends JavaPlugin implements Listener {
             }
         }.runTaskTimer(this, 20L, 20L * 15);
     }
+
+    private void clearMobsInRegions() {
+        for (World world : Bukkit.getWorlds()) {
+            String worldName = world.getName();
+            Map<String, RegionConfig> configs = regionConfigs.get(worldName);
+            if (configs == null) continue;
+
+            for (String regionId : configs.keySet()) {
+                ProtectedRegion region = getRegion(world, regionId);
+                if (region == null) continue;
+
+                for (Entity entity : world.getEntities()) {
+                    if (!(entity instanceof LivingEntity) || entity instanceof Player) continue;
+
+                    Location loc = entity.getLocation();
+                    if (region.contains(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ())) {
+                        entity.remove();
+                    }
+                }
+
+                // Resetear contador
+                mobCounters.computeIfAbsent(worldName, k -> new HashMap<>())
+                        .put(regionId, 0);
+            }
+        }
+    }
+
 
     private void loadConfig() {
         disabledWorlds = new HashSet<>(getConfig().getStringList("disabled-worlds"));
@@ -198,15 +227,22 @@ public class RankupZones extends JavaPlugin implements Listener {
                 // Si NO es un mundo deshabilitado, spawnear sin importar regiones si hay config
                 if (configs == null || configs.isEmpty()) continue;
 
-                for (RegionConfig config : configs.values()) {
-                    int currentCount = countEntitiesOfTypes(world, config.allowedMobs);
-                    int toSpawn = Math.min(5, config.maxCount - currentCount);
+                for (Map.Entry<String, RegionConfig> entry : configs.entrySet()) {
+                    String regionId = entry.getKey();
+                    RegionConfig config = entry.getValue();
+
+                    int currentCount = mobCounters
+                            .getOrDefault(world.getName(), Collections.emptyMap())
+                            .getOrDefault(regionId, 0);
+
+                    int toSpawn = Math.max(0, Math.min(5, config.maxCount - currentCount));
                     if (toSpawn <= 0) continue;
 
                     for (int i = 0; i < toSpawn; i++) {
                         EntityType type = config.getRandomMobType();
                         Location loc = getRandomLocationInWorld(world);
                         world.spawnEntity(loc, type);
+                        incrementMobCounter(world.getName(), regionId, 1);
                     }
                 }
             }
@@ -248,11 +284,13 @@ public class RankupZones extends JavaPlugin implements Listener {
             Location loc = new Location(world, x, y, z);
             while (loc.getBlock().getType().isAir() && loc.getY() > 1) {
                 loc.subtract(0, 1, 0);
+
             }
 
             LivingEntity entity = (LivingEntity) world.spawnEntity(loc.add(0, 1, 0), type);
             entity.setAI(false);
             entity.setRemoveWhenFarAway(false);
+            incrementMobCounter(world.getName(), region.getId(), 1);
         }
     }
 
@@ -282,17 +320,18 @@ public class RankupZones extends JavaPlugin implements Listener {
     public void onEntityDeath(EntityDeathEvent event) {
         LivingEntity entity = event.getEntity();
         String region = getRegionAt(entity.getLocation());
-
         if (region != null) {
             String worldName = entity.getWorld().getName();
-            RegionConfig config = regionConfigs.getOrDefault(worldName, Collections.emptyMap()).get(region);
+            decrementMobCounter(worldName, region, 1);
 
+            RegionConfig config = regionConfigs.getOrDefault(worldName, Collections.emptyMap()).get(region);
             if (config != null && config.customDrops.containsKey(entity.getType())) {
                 event.getDrops().clear();
                 event.getDrops().addAll(config.customDrops.get(entity.getType()));
             }
         }
     }
+
 
     @EventHandler
     public void onPlayerMove(PlayerMoveEvent event) {
@@ -343,5 +382,25 @@ public class RankupZones extends JavaPlugin implements Listener {
         public EntityType getRandomMobType() {
             return allowedMobs.get(new Random().nextInt(allowedMobs.size()));
         }
+    }
+
+    private void incrementMobCounter(String worldName, String regionId, int amount) {
+        mobCounters.computeIfAbsent(worldName, k -> new HashMap<>())
+                .merge(regionId, amount, Integer::sum);
+    }
+
+    private void decrementMobCounter(String worldName, String regionId, int amount) {
+        mobCounters.computeIfAbsent(worldName, k -> new HashMap<>())
+                .merge(regionId, -amount, Integer::sum);
+    }
+
+    private ProtectedRegion getRegion(World world, String regionId) {
+        RegionManager regionManager = WorldGuard.getInstance()
+                .getPlatform()
+                .getRegionContainer()
+                .get(BukkitAdapter.adapt(world));
+        if (regionManager == null) return null;
+
+        return regionManager.getRegion(regionId);
     }
 }

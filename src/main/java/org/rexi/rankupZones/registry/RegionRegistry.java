@@ -89,7 +89,9 @@ public class RegionRegistry {
 
                 Location candidate = new Location(world, x, y, z);
 
-                if (candidate.clone().subtract(0, 1, 0).getBlock().getType().isSolid()) {
+                if (candidate.clone().subtract(0, 1, 0).getBlock().getType().isSolid()
+                        && candidate.getBlock().getType() == Material.AIR
+                        && candidate.clone().add(0, 1, 0).getBlock().getType() == Material.AIR) {
                     loc = candidate;
                     break;
                 }

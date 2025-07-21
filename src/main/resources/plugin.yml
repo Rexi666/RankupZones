@@ -6,5 +6,4 @@ dependencies:
   - WorldGuard
 commands:
   rz:
-    description: Recargar la configuración del plugin
-    usage: /rz reload
+    description: Ver/Modificar cantidad de mobs en las zonas de rankup

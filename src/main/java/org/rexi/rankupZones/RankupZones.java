@@ -45,14 +45,19 @@ public class RankupZones extends JavaPlugin {
         // Carga la configuración hardcodeada
         RegionRegistry.loadRegions();
 
-        removeMobsInRegions();
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                removeMobsInRegions();
+            }
+        }.runTaskLater(this, 50L);
 
         new BukkitRunnable() {
             @Override
             public void run() {
                 spawnMobsInRegions();
             }
-        }.runTaskTimer(this, 20L, 20L * 15);
+        }.runTaskTimer(this, 100L, 20L * 15);
 
         getServer().getPluginManager().registerEvents(new EntitySpawnListener(), this);
         getServer().getPluginManager().registerEvents(new EntityDeathListener(), this);

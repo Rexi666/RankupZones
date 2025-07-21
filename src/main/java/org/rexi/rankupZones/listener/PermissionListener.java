@@ -31,9 +31,12 @@ public class PermissionListener implements Listener {
         if (region == null) return;
 
         String requiredPermission = region.getPermission();
+        String requiredPermission2 = region.getPermission2();
         if (requiredPermission != null && !player.hasPermission(requiredPermission)) {
-            player.sendMessage(ChatColor.RED + "No tienes permiso para dañar entidades en esta zona.");
-            event.setCancelled(true);
+            if (requiredPermission2 != null && !player.hasPermission(requiredPermission2)) {
+                player.sendMessage(ChatColor.RED + "No tienes permiso para dañar entidades en esta zona.");
+                event.setCancelled(true);
+            }
         }
     }
 
@@ -50,9 +53,12 @@ public class PermissionListener implements Listener {
             if (region == null) return;
 
             String requiredPermission = region.getPermission();
+            String requiredPermission2 = region.getPermission2();
             if (requiredPermission != null && !event.getPlayer().hasPermission(requiredPermission)) {
-                event.getPlayer().sendMessage(ChatColor.RED + "No tienes permiso para entrar en esta zona.");
-                event.setCancelled(true);
+                if (requiredPermission2 != null && !event.getPlayer().hasPermission(requiredPermission2)) {
+                    event.getPlayer().sendMessage(ChatColor.RED + "No tienes permiso para entrar en esta zona.");
+                    event.setCancelled(true);
+                }
             }
         }
     }

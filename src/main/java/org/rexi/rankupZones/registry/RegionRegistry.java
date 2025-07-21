@@ -24,24 +24,24 @@ public class RegionRegistry {
 
     public static void loadRegions() {
         // Región ejemplo: rankup_vacas
-        addRegion("rankup_vacas", "group.default", "group.default", EntityType.COW, "Esencia de Vaca");
-        addRegion("rankup_cerdos", "nivel.1", "rankupzones.pase", EntityType.PIG, "Esencia de Cerdo");
-        addRegion("rankup_ovejas", "nivel.2", "rankupzones.pase", EntityType.SHEEP, "Esencia de Oveja");
-        addRegion("rankup_conejos", "nivel.3", "rankupzones.pase",  EntityType.RABBIT, "Esencia de Conejo");
-        addRegion("rankup_pollos", "nivel.10", "rankupzones.pase",  EntityType.CHICKEN, "Esencia de Pollo");
-        addRegion("rankup_abejas", "nivel.11", "rankupzones.pase",  EntityType.BEE, "Esencia de Abeja");
-        addRegion("rankup_zombies", "nivel.5", "rankupzones.pase",  EntityType.ZOMBIE, "Esencia de Zombie");
-        addRegion("rankup_esqueletos", "nivel.5", "rankupzones.pase",  EntityType.SKELETON, "Esencia de Esqueleto");
-        addRegion("rankup_aranas", "nivel.6", "rankupzones.pase",  EntityType.SPIDER, "Esencia de Arañas");
-        addRegion("rankup_muercielagos", "nivel.7", "rankupzones.pase",  EntityType.BAT, "Esencia de Murciélagos");
-        addRegion("rankup_creepers", "nivel.8", "rankupzones.pase",  EntityType.CREEPER, "Esencia de Creepers");
+        addRegion("rankup_vacas", "group.default", "group.default", EntityType.COW, "Esencia de Vaca", Material.BLACK_DYE);
+        addRegion("rankup_cerdos", "nivel.1", "rankupzones.pase", EntityType.PIG, "Esencia de Cerdo", Material.PINK_DYE);
+        addRegion("rankup_ovejas", "nivel.2", "rankupzones.pase", EntityType.SHEEP, "Esencia de Oveja", Material.WHITE_DYE);
+        addRegion("rankup_conejos", "nivel.3", "rankupzones.pase",  EntityType.RABBIT, "Esencia de Conejo", Material.BROWN_DYE);
+        addRegion("rankup_pollos", "nivel.10", "rankupzones.pase",  EntityType.CHICKEN, "Esencia de Pollo", Material.YELLOW_DYE);
+        addRegion("rankup_abejas", "nivel.11", "rankupzones.pase",  EntityType.BEE, "Esencia de Abeja", Material.ORANGE_DYE);
+        addRegion("rankup_zombies", "nivel.5", "rankupzones.pase",  EntityType.ZOMBIE, "Esencia de Zombie", Material.GREEN_DYE);
+        addRegion("rankup_esqueletos", "nivel.5", "rankupzones.pase",  EntityType.SKELETON, "Esencia de Esqueleto", Material.GRAY_DYE);
+        addRegion("rankup_aranas", "nivel.6", "rankupzones.pase",  EntityType.SPIDER, "Esencia de Arañas", Material.LIGHT_GRAY_DYE);
+        addRegion("rankup_muercielagos", "nivel.7", "rankupzones.pase",  EntityType.BAT, "Esencia de Murciélagos", Material.BROWN_DYE);
+        addRegion("rankup_creepers", "nivel.8", "rankupzones.pase",  EntityType.CREEPER, "Esencia de Creepers", Material.LIME_DYE);
     }
 
-    private static void addRegion(String name, String permission, String permission2, EntityType mob, String dropName) {
+    private static void addRegion(String name, String permission, String permission2, EntityType mob, String dropName, Material material) {
         ZoneRegion region = new ZoneRegion(name, permission, permission2);
         region.addMob(mob);
         region.addDrop(mob, new CustomDrop(
-                Material.REDSTONE,
+                material,
                 1,
                 "&6" + dropName,
                 List.of("&r", "&7Tradeable en /warp rankup"),

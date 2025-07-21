@@ -5,15 +5,13 @@ import com.sk89q.worldguard.WorldGuard;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.sk89q.worldguard.protection.regions.RegionContainer;
-import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.World;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandSender;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.rexi.rankupZones.command.CountingCommand;
 import org.rexi.rankupZones.listener.EntitySpawnListener;
 import org.rexi.rankupZones.listener.EntityDeathListener;
 import org.rexi.rankupZones.listener.PermissionListener;
@@ -59,6 +57,9 @@ public class RankupZones extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new EntitySpawnListener(), this);
         getServer().getPluginManager().registerEvents(new EntityDeathListener(), this);
         getServer().getPluginManager().registerEvents(new PermissionListener(), this);
+
+        CountingCommand CountingCommand = new CountingCommand(this);
+        getCommand("rz").setExecutor(CountingCommand);
         getLogger().info("RankupZones ha sido habilitado.");
     }
 
@@ -101,7 +102,6 @@ public class RankupZones extends JavaPlugin {
         if (countCreepers < 15) {
             RegionRegistry.spawnMob("rankup_creepers", EntityType.CREEPER, 3);
         }
-        getLogger().info("Spawning mobs...");
     }
 
     private void removeMobsInRegions() {

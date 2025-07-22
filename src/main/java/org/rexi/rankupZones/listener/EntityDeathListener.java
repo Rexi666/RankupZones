@@ -49,6 +49,7 @@ public class EntityDeathListener implements Listener {
             case SPIDER -> plugin.countAranas--;
             case BAT -> plugin.countMurcielagos--;
             case CREEPER -> plugin.countCreepers--;
+            case BLAZE -> plugin.countBlazes--;
         }
     }
 

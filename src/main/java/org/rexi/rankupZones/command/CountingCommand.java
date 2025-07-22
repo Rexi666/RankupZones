@@ -34,8 +34,9 @@ public class CountingCommand implements CommandExecutor {
                 case "arañas", "araña" -> sender.sendMessage(ChatColor.AQUA + "Arañas: " + plugin.countAranas);
                 case "murcielagos", "murcielago" -> sender.sendMessage(ChatColor.AQUA + "Murciélagos: " + plugin.countMurcielagos);
                 case "creepers", "creeper" -> sender.sendMessage(ChatColor.AQUA + "Creepers: " + plugin.countCreepers);
+                case "blazes", "blaze" -> sender.sendMessage(ChatColor.AQUA + "Blazes: " + plugin.countBlazes);
                 default -> {
-                    sender.sendMessage(ChatColor.RED + "Tipo inválido. Usa: vacas, cerdos, ovejas, conejos, gallinas, abejas, zombies, esqueletos, arañas, murcielagos o creepers.");
+                    sender.sendMessage(ChatColor.RED + "Tipo inválido. Usa: vacas, cerdos, ovejas, conejos, gallinas, abejas, zombies, esqueletos, arañas, murcielagos, creepers o blazes.");
                     return false;
                 }
             }
@@ -65,8 +66,9 @@ public class CountingCommand implements CommandExecutor {
                 case "arañas", "araña" -> plugin.countAranas = count;
                 case "murcielagos", "murcielago" -> plugin.countMurcielagos = count;
                 case "creepers", "creeper" -> plugin.countCreepers = count;
+                case "blazes", "blaze" -> plugin.countBlazes = count;
                 default -> {
-                    sender.sendMessage(ChatColor.RED + "Tipo inválido. Usa: vacas, cerdos, ovejas, conejos, gallinas, abejas, zombies, esqueletos, arañas, murcielagos o creepers.");
+                    sender.sendMessage(ChatColor.RED + "Tipo inválido. Usa: vacas, cerdos, ovejas, conejos, gallinas, abejas, zombies, esqueletos, arañas, murcielagos, creepers o blazes.");
                     return false;
                 }
             }

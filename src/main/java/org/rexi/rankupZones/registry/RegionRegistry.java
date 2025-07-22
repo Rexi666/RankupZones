@@ -35,6 +35,7 @@ public class RegionRegistry {
         addRegion("rankup_aranas", "nivel.6", "rankupzones.pase",  EntityType.SPIDER, "Esencia de Arañas", Material.LIGHT_GRAY_DYE);
         addRegion("rankup_muercielagos", "nivel.7", "rankupzones.pase",  EntityType.BAT, "Esencia de Murciélagos", Material.BROWN_DYE);
         addRegion("rankup_creepers", "nivel.8", "rankupzones.pase",  EntityType.CREEPER, "Esencia de Creepers", Material.LIME_DYE);
+        addRegion("rankup_blazes", "nivel.9", "rankupzones.pase", EntityType.BLAZE, "Esencia de Blaze", Material.RED_DYE);
     }
 
     private static void addRegion(String name, String permission, String permission2, EntityType mob, String dropName, Material material) {

@@ -12,6 +12,7 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.rexi.rankupZones.command.CountingCommand;
+import org.rexi.rankupZones.listener.EntityMoveListener;
 import org.rexi.rankupZones.listener.EntitySpawnListener;
 import org.rexi.rankupZones.listener.EntityDeathListener;
 import org.rexi.rankupZones.listener.PermissionListener;
@@ -33,6 +34,7 @@ public class RankupZones extends JavaPlugin {
     public int countAranas = 0;
     public int countMurcielagos = 0;
     public int countCreepers = 0;
+    public int countBlazes = 0;
 
     public static RankupZones getInstance() {
         return instance;
@@ -50,18 +52,19 @@ public class RankupZones extends JavaPlugin {
             public void run() {
                 removeMobsInRegions();
             }
-        }.runTaskLater(this, 50L);
+        }.runTaskLater(this, 100L);
 
         new BukkitRunnable() {
             @Override
             public void run() {
                 spawnMobsInRegions();
             }
-        }.runTaskTimer(this, 100L, 20L * 15);
+        }.runTaskTimer(this, 150L, 20L * 15);
 
         getServer().getPluginManager().registerEvents(new EntitySpawnListener(), this);
         getServer().getPluginManager().registerEvents(new EntityDeathListener(), this);
         getServer().getPluginManager().registerEvents(new PermissionListener(), this);
+        getServer().getPluginManager().registerEvents(new EntityMoveListener(), this);
 
         CountingCommand CountingCommand = new CountingCommand(this);
         getCommand("rz").setExecutor(CountingCommand);
@@ -106,6 +109,9 @@ public class RankupZones extends JavaPlugin {
         }
         if (countCreepers < 15) {
             RegionRegistry.spawnMob("rankup_creepers", EntityType.CREEPER, 3);
+        }
+        if (countBlazes < 15) {
+            RegionRegistry.spawnMob("rankup_blazes", EntityType.BLAZE, 3);
         }
     }
 

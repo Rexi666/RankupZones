@@ -37,7 +37,7 @@ public class EntitySpawnListener implements Listener {
         // Si está permitido, desactivamos AI y otras flags
         if (entity instanceof LivingEntity living) {
             living.setRemoveWhenFarAway(false); // No se elimina si el jugador se aleja
-            living.setAI(false);                // Sin IA
+            living.setAI(true);                // Sin IA
             living.setPersistent(true);         // No despawnea naturalmente
 
             // Restar del contador
@@ -56,6 +56,7 @@ public class EntitySpawnListener implements Listener {
                 case SPIDER -> plugin.countAranas++;
                 case BAT -> plugin.countMurcielagos++;
                 case CREEPER -> plugin.countCreepers++;
+                case BLAZE -> plugin.countBlazes++;
             }
         }
     }

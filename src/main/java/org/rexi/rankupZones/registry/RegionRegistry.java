@@ -30,7 +30,7 @@ public class RegionRegistry {
         addRegion("rankup_conejos", "nivel.3", "rankupzones.pase",  EntityType.RABBIT, "Esencia de Conejo", Material.BROWN_DYE);
         addRegion("rankup_pollos", "nivel.10", "rankupzones.pase",  EntityType.CHICKEN, "Esencia de Pollo", Material.YELLOW_DYE);
         addRegion("rankup_abejas", "nivel.11", "rankupzones.pase",  EntityType.BEE, "Esencia de Abeja", Material.ORANGE_DYE);
-        addRegion("rankup_zombies", "nivel.5", "rankupzones.pase",  EntityType.ZOMBIE, "Esencia de Zombie", Material.GREEN_DYE);
+        addRegion("rankup_zombies", "nivel.4", "rankupzones.pase",  EntityType.ZOMBIE, "Esencia de Zombie", Material.GREEN_DYE);
         addRegion("rankup_esqueletos", "nivel.5", "rankupzones.pase",  EntityType.SKELETON, "Esencia de Esqueleto", Material.GRAY_DYE);
         addRegion("rankup_aranas", "nivel.6", "rankupzones.pase",  EntityType.SPIDER, "Esencia de Arañas", Material.LIGHT_GRAY_DYE);
         addRegion("rankup_muercielagos", "nivel.7", "rankupzones.pase",  EntityType.BAT, "Esencia de Murciélagos", Material.BROWN_DYE);

@@ -61,6 +61,14 @@ public class RankupZones extends JavaPlugin {
             }
         }.runTaskTimer(this, 150L, 20L * 15);
 
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                recountEntitiesInRegions();
+            }
+        }.runTaskTimer(this, 150L, 20L * 120); // cada 2 minutos
+
+
         getServer().getPluginManager().registerEvents(new EntitySpawnListener(), this);
         getServer().getPluginManager().registerEvents(new EntityDeathListener(), this);
         getServer().getPluginManager().registerEvents(new PermissionListener(), this);
@@ -138,4 +146,69 @@ public class RankupZones extends JavaPlugin {
                     }
                 });
     }
+
+    private void recountEntitiesInRegions() {
+        World world = getServer().getWorld("mobs");
+        if (world == null) return;
+
+        RegionContainer container = WorldGuard.getInstance().getPlatform().getRegionContainer();
+        RegionManager manager = container.get(BukkitAdapter.adapt(world));
+        if (manager == null) return;
+
+        RegionRegistry.getAllRegions().forEach(region -> {
+            String regionId = region.getName();
+            ProtectedRegion protectedRegion = manager.getRegion(regionId);
+            if (protectedRegion == null) return;
+
+            boolean hasEntity = world.getEntities().stream()
+                    .filter(entity -> entity instanceof LivingEntity && !(entity instanceof Player))
+                    .anyMatch(entity -> {
+                        Location loc = entity.getLocation();
+                        if (!protectedRegion.contains(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ())) {
+                            return false;
+                        }
+                        return regionMatchesEntityType(region.getName(), entity.getType());
+                    });
+
+            if (!hasEntity) {
+                resetCounterForRegion(regionId);
+            }
+        });
+    }
+
+    private boolean regionMatchesEntityType(String regionId, EntityType type) {
+        return switch (regionId) {
+            case "rankup_vacas" -> type == EntityType.COW;
+            case "rankup_cerdos" -> type == EntityType.PIG;
+            case "rankup_ovejas" -> type == EntityType.SHEEP;
+            case "rankup_conejos" -> type == EntityType.RABBIT;
+            case "rankup_pollos" -> type == EntityType.CHICKEN;
+            case "rankup_abejas" -> type == EntityType.BEE;
+            case "rankup_zombies" -> type == EntityType.ZOMBIE;
+            case "rankup_esqueletos" -> type == EntityType.SKELETON;
+            case "rankup_aranas" -> type == EntityType.SPIDER;
+            case "rankup_muercielagos" -> type == EntityType.BAT;
+            case "rankup_creepers" -> type == EntityType.CREEPER;
+            case "rankup_blazes" -> type == EntityType.BLAZE;
+            default -> false;
+        };
+    }
+
+    private void resetCounterForRegion(String regionId) {
+        switch (regionId) {
+            case "rankup_vacas" -> countVacas = 0;
+            case "rankup_cerdos" -> countCerdos = 0;
+            case "rankup_ovejas" -> countOvejas = 0;
+            case "rankup_conejos" -> countConejos = 0;
+            case "rankup_pollos" -> countPollos = 0;
+            case "rankup_abejas" -> countAbejas = 0;
+            case "rankup_zombies" -> countZombies = 0;
+            case "rankup_esqueletos" -> countEsqueletos = 0;
+            case "rankup_aranas" -> countAranas = 0;
+            case "rankup_muercielagos" -> countMurcielagos = 0;
+            case "rankup_creepers" -> countCreepers = 0;
+            case "rankup_blazes" -> countBlazes = 0;
+        }
+    }
+
 }

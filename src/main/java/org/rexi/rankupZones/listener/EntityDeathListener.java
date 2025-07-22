@@ -5,11 +5,13 @@ import com.sk89q.worldguard.WorldGuard;
 import com.sk89q.worldguard.protection.ApplicableRegionSet;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.RegionContainer;
+import org.bukkit.entity.Creeper;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.entity.EntityExplodeEvent;
 import org.rexi.rankupZones.RankupZones;
 import org.rexi.rankupZones.model.CustomDrop;
 import org.rexi.rankupZones.model.ZoneRegion;
@@ -60,5 +62,18 @@ public class EntityDeathListener implements Listener {
 
         ApplicableRegionSet set = manager.getApplicableRegions(BukkitAdapter.asBlockVector(entity.getLocation()));
         return set.getRegions().stream().findFirst().map(r -> r.getId().toLowerCase()).orElse(null);
+    }
+
+    @EventHandler
+    public void onCreeperExplode(EntityExplodeEvent event) {
+        if (!(event.getEntity() instanceof Creeper creeper)) return;
+
+        String regionName = getRegionName(creeper);
+        if (regionName == null) return;
+
+        ZoneRegion region = RegionRegistry.getRegion(regionName);
+        if (region == null || !region.isMobAllowed(creeper.getType())) return;
+
+        RankupZones.getInstance().countCreepers--;
     }
 }

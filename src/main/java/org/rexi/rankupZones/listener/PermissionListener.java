@@ -8,6 +8,7 @@ import com.sk89q.worldguard.protection.regions.RegionContainer;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
@@ -21,7 +22,22 @@ public class PermissionListener implements Listener {
 
     @EventHandler
     public void onEntityDamage(EntityDamageByEntityEvent event) {
-        if (!(event.getDamager() instanceof Player player)) return;
+        Player player = null;
+
+        // Si el que daña es un jugador directamente
+        if (event.getDamager() instanceof Player directPlayer) {
+            player = directPlayer;
+        }
+
+        // Si es una flecha u otro proyectil disparado por un jugador
+        else if (event.getDamager() instanceof Projectile projectile) {
+            if (projectile.getShooter() instanceof Player shooter) {
+                player = shooter;
+            }
+        }
+
+        // Si no fue un jugador ni un proyectil disparado por jugador, ignorar
+        if (player == null) return;
 
         Location location = event.getEntity().getLocation();
         String regionId = getRegionAt(location);

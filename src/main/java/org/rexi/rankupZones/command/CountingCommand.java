@@ -16,6 +16,17 @@ public class CountingCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        if (!sender.hasPermission("rankupzones.admin")) {
+            sender.sendMessage(ChatColor.RED + "No tienes permiso para usar este comando.");
+            return true;
+        }
+
+        if (args[0].equalsIgnoreCase("reload")) {
+            plugin.reloadConfig();
+            sender.sendMessage(ChatColor.GREEN + "Configuración recargada.");
+            return true;
+        }
+
         if (args.length == 0 || args.length > 2) {
             sender.sendMessage("Uso: /rz <tipo> [cantidad]");
             return false;

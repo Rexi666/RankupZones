@@ -12,10 +12,7 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.rexi.rankupZones.command.CountingCommand;
-import org.rexi.rankupZones.listener.EntityMoveListener;
-import org.rexi.rankupZones.listener.EntitySpawnListener;
-import org.rexi.rankupZones.listener.EntityDeathListener;
-import org.rexi.rankupZones.listener.PermissionListener;
+import org.rexi.rankupZones.listener.*;
 import org.rexi.rankupZones.registry.RegionRegistry;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -35,6 +32,7 @@ public class RankupZones extends JavaPlugin {
     public int countMurcielagos = 0;
     public int countCreepers = 0;
     public int countBlazes = 0;
+    public boolean mobsCleared = false;
 
     public static RankupZones getInstance() {
         return instance;
@@ -42,6 +40,7 @@ public class RankupZones extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        saveDefaultConfig();
         instance = this;
 
         // Carga la configuración hardcodeada
@@ -65,6 +64,7 @@ public class RankupZones extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new EntityDeathListener(), this);
         getServer().getPluginManager().registerEvents(new PermissionListener(), this);
         getServer().getPluginManager().registerEvents(new EntityMoveListener(), this);
+        getServer().getPluginManager().registerEvents(new PlayerListener(), this);
 
         CountingCommand CountingCommand = new CountingCommand(this);
         getCommand("rz").setExecutor(CountingCommand);

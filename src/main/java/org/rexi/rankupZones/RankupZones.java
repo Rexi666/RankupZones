@@ -5,6 +5,7 @@ import com.sk89q.worldguard.WorldGuard;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.sk89q.worldguard.protection.regions.RegionContainer;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.EntityType;
@@ -139,4 +140,28 @@ public class RankupZones extends JavaPlugin {
                 });
     }
 
+    public void removeWorld() {
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                // Si el jugador entra al mundo de mobs, reiniciamos los contadores
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "killall mobs mobs");
+                countVacas = 0;
+                countCerdos = 0;
+                countOvejas = 0;
+                countConejos = 0;
+                countPollos = 0;
+                countAbejas = 0;
+                countZombies = 0;
+                countEsqueletos = 0;
+                countAranas = 0;
+                countMurcielagos = 0;
+                countCreepers = 0;
+                countBlazes = 0;
+
+                // Reiniciamos la bandera de mobs eliminados
+                mobsCleared = true;
+            }
+        }.runTaskLater(this, 20L);
+    }
 }

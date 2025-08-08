@@ -12,6 +12,7 @@ import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.inventory.CraftingInventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.rexi.rankupZones.RankupZones;
 
 import java.util.List;
@@ -28,23 +29,7 @@ public class PlayerListener implements Listener {
         String newWorld = player.getWorld().getName();
 
         if (newWorld.equalsIgnoreCase("mobs")) {
-            // Si el jugador entra al mundo de mobs, reiniciamos los contadores
-            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "killall mobs mobs");
-            plugin.countVacas = 0;
-            plugin.countCerdos = 0;
-            plugin.countOvejas = 0;
-            plugin.countConejos = 0;
-            plugin.countPollos = 0;
-            plugin.countAbejas = 0;
-            plugin.countZombies = 0;
-            plugin.countEsqueletos = 0;
-            plugin.countAranas = 0;
-            plugin.countMurcielagos = 0;
-            plugin.countCreepers = 0;
-            plugin.countBlazes = 0;
-
-            // Reiniciamos la bandera de mobs eliminados
-            plugin.mobsCleared = true;
+            plugin.removeWorld();
         }
     }
 

@@ -29,6 +29,7 @@ public class PlayerListener implements Listener {
         String newWorld = player.getWorld().getName();
 
         if (newWorld.equalsIgnoreCase("mobs")) {
+            plugin.mobsCleared = true;
             plugin.removeWorld();
         }
     }

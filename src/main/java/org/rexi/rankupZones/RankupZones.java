@@ -158,9 +158,6 @@ public class RankupZones extends JavaPlugin {
                 countMurcielagos = 0;
                 countCreepers = 0;
                 countBlazes = 0;
-
-                // Reiniciamos la bandera de mobs eliminados
-                mobsCleared = true;
             }
         }.runTaskLater(this, 20L);
     }

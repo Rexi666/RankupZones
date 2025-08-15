@@ -7,11 +7,13 @@ import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.RegionContainer;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.rexi.rankupZones.model.ZoneRegion;
 import org.rexi.rankupZones.registry.RegionRegistry;
@@ -23,6 +25,12 @@ public class PermissionListener implements Listener {
     @EventHandler
     public void onEntityDamage(EntityDamageByEntityEvent event) {
         Player player = null;
+
+        if (event.getCause() == EntityDamageEvent.DamageCause.THORNS
+                && event.getEntity().getWorld().getName().equals("world")) {
+            event.setCancelled(true);
+            return;
+        }
 
         // Si el que daña es un jugador directamente
         if (event.getDamager() instanceof Player directPlayer) {

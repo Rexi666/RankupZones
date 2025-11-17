@@ -7,7 +7,6 @@ import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.RegionContainer;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
-import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
@@ -27,7 +26,7 @@ public class PermissionListener implements Listener {
         Player player = null;
 
         if (event.getCause() == EntityDamageEvent.DamageCause.THORNS
-                && event.getEntity().getWorld().getName().equals("world")) {
+                && event.getEntity().getWorld().getName().equals("mobs")) {
             event.setCancelled(true);
             return;
         }

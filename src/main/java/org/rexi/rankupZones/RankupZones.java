@@ -33,7 +33,8 @@ public class RankupZones extends JavaPlugin {
     public int countMurcielagos = 0;
     public int countCreepers = 0;
     public int countBlazes = 0;
-    public boolean mobsCleared = false;
+    public int countVindicator = 0;
+    public int countRavager = 0;
 
     public static RankupZones getInstance() {
         return instance;
@@ -114,6 +115,12 @@ public class RankupZones extends JavaPlugin {
         if (countBlazes < 15) {
             RegionRegistry.spawnMob("rankup_blazes", EntityType.BLAZE, 3);
         }
+        if (countVindicator < 15) {
+            RegionRegistry.spawnMob("rankup_vindicator", EntityType.VINDICATOR, 3);
+        }
+        if (countRavager < 15) {
+            RegionRegistry.spawnMob("rankup_ravager", EntityType.RAVAGER, 3);
+        }
     }
 
     private void removeMobsInRegions() {
@@ -158,6 +165,8 @@ public class RankupZones extends JavaPlugin {
                 countMurcielagos = 0;
                 countCreepers = 0;
                 countBlazes = 0;
+                countVindicator = 0;
+                countRavager = 0;
             }
         }.runTaskLater(this, 20L);
     }

@@ -46,8 +46,10 @@ public class CountingCommand implements CommandExecutor {
                 case "murcielagos", "murcielago" -> sender.sendMessage(ChatColor.AQUA + "Murciélagos: " + plugin.countMurcielagos);
                 case "creepers", "creeper" -> sender.sendMessage(ChatColor.AQUA + "Creepers: " + plugin.countCreepers);
                 case "blazes", "blaze" -> sender.sendMessage(ChatColor.AQUA + "Blazes: " + plugin.countBlazes);
+                case "vindicador", "vindicadores" -> sender.sendMessage(ChatColor.AQUA + "Vindicadores: " + plugin.countVindicator);
+                case "devastador", "devastadores" -> sender.sendMessage(ChatColor.AQUA + "Devastador: " + plugin.countRavager);
                 default -> {
-                    sender.sendMessage(ChatColor.RED + "Tipo inválido. Usa: vacas, cerdos, ovejas, conejos, gallinas, abejas, zombies, esqueletos, arañas, murcielagos, creepers o blazes.");
+                    sender.sendMessage(ChatColor.RED + "Tipo inválido. Usa: vacas, cerdos, ovejas, conejos, gallinas, abejas, zombies, esqueletos, arañas, murcielagos, creepers, blazes, vindicadores o devastadores.");
                     return false;
                 }
             }
@@ -78,8 +80,10 @@ public class CountingCommand implements CommandExecutor {
                 case "murcielagos", "murcielago" -> plugin.countMurcielagos = count;
                 case "creepers", "creeper" -> plugin.countCreepers = count;
                 case "blazes", "blaze" -> plugin.countBlazes = count;
+                case "vindicador", "vindicadores" -> plugin.countVindicator = count;
+                case "devastador", "devastadores" -> plugin.countRavager = count;
                 default -> {
-                    sender.sendMessage(ChatColor.RED + "Tipo inválido. Usa: vacas, cerdos, ovejas, conejos, gallinas, abejas, zombies, esqueletos, arañas, murcielagos, creepers o blazes.");
+                    sender.sendMessage(ChatColor.RED + "Tipo inválido. Usa: vacas, cerdos, ovejas, conejos, gallinas, abejas, zombies, esqueletos, arañas, murcielagos, creepers, blazes, vindicadores o devastadores");
                     return false;
                 }
             }

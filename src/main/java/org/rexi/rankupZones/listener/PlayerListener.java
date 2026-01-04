@@ -3,6 +3,7 @@ package org.rexi.rankupZones.listener;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -21,14 +22,17 @@ public class PlayerListener implements Listener {
 
     @EventHandler
     public void onWorldChange(PlayerChangedWorldEvent event) {
-        if (plugin.mobsCleared) return;
-
         Player player = event.getPlayer();
-        String newWorld = player.getWorld().getName();
+        World world = player.getWorld();
 
-        if (newWorld.equalsIgnoreCase("mobs")) {
-            plugin.mobsCleared = true;
-            plugin.removeWorld();
+        if (world.getName().equalsIgnoreCase("mobs")) {
+            long entities = world.getLivingEntities().stream()
+                    .filter(entity -> !(entity instanceof Player))
+                    .count();
+            if (entities > 250) {
+                plugin.removeWorld();
+                System.out.println("[RankupZones] Demasiadas entidades en el mundo 'mobs'. Se han eliminado todas las entidades: "+ entities);
+            }
         }
     }
 

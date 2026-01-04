@@ -57,6 +57,8 @@ public class EntitySpawnListener implements Listener {
                 case BAT -> plugin.countMurcielagos++;
                 case CREEPER -> plugin.countCreepers++;
                 case BLAZE -> plugin.countBlazes++;
+                case VINDICATOR -> plugin.countVindicator++;
+                case RAVAGER -> plugin.countRavager++;
             }
         }
     }
